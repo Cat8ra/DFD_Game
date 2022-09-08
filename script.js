@@ -76,28 +76,28 @@ class Field{
 					if (tanks_list[0].pos_y !== 0 && 
 					    this.grid[tanks_list[0].pos_y - 1][tanks_list[0].pos_x] == Cell.Empty && 
 						this.grid[tanks_list[0].pos_y - 1][tanks_list[0].pos_x + 1] == Cell.Empty){
-						tanks_list[0].move_frames = 16;
+						tanks_list[0].move_frames = 8;
 					}
 					break;
 				case Direction.Down:
 					if (tanks_list[0].pos_y !== this.height - 2 && 
 					    this.grid[tanks_list[0].pos_y + 1][tanks_list[0].pos_x] == Cell.Empty && 
 						this.grid[tanks_list[0].pos_y + 1][tanks_list[0].pos_x + 1] == Cell.Empty){
-						tanks_list[0].move_frames = 16;
+						tanks_list[0].move_frames = 8;
 					}
 					break;
 				case Direction.Left:
 					if (tanks_list[0].pos_x !== 0 && 
 					    this.grid[tanks_list[0].pos_y][tanks_list[0].pos_x - 1] == Cell.Empty && 
 						this.grid[tanks_list[0].pos_y + 1][tanks_list[0].pos_x - 1] == Cell.Empty){
-						tanks_list[0].move_frames = 16;
+						tanks_list[0].move_frames = 8;
 					}
 					break;
 				case Direction.Right:
 					if (tanks_list[0].pos_x !== this.width - 2 && 
 					    this.grid[tanks_list[0].pos_y][tanks_list[0].pos_x + 1] == Cell.Empty && 
 						this.grid[tanks_list[0].pos_y + 1][tanks_list[0].pos_x + 1] == Cell.Empty){
-						tanks_list[0].move_frames = 16;
+						tanks_list[0].move_frames = 8;
 					}
 					break;
 		    }
