@@ -2,7 +2,6 @@
 const Direction = { Up: 0, Right: 1, Down: 2, Left: 3};
 const Cell = { Empty: 0, Brick: 1, Wall: 2, Grass: 3 };
 let pressed_arrow = null;
-let tanks_list = [];
 
 class Tank{
   constructor(pos_x = 0, pos_y = 0, dir = Direction.Up, texture = 0){
@@ -13,7 +12,6 @@ class Tank{
     this.texture = texture;
 	this.stat = {name : "idle"};
     this.move_frames = 0;
-    tanks_list.push(this);
   }
 
   get texture_x() {
@@ -61,6 +59,7 @@ class Field{
     this.canvas = document.getElementById("field");
     this.context = this.canvas.getContext("2d");
     this.tanks = [];
+	this.bullets = [];
 	this.tasks = [{type: "field"}];
     this.frame_ = 0;
     this.fps = 16;
@@ -79,42 +78,71 @@ class Field{
       [Direction.Left,  ['pos_x', -1, -1,  0,  1, -1, 0]],
       [Direction.Right, ['pos_x',  1,  1,  0,  1,  1, this.width - 2]],
     ]);
-
-    if (tanks_list[0].move_frames === 0 && pressed_arrow !== null) {
-      tanks_list[0].direction = pressed_arrow;
+    
+	if (user_tank.shoot) {
+        const [pos, x1, x2, y1, y2, mult, edge] = tankShift.get(user_tank.direction);
+		user_tank.shoot = false;
+		this.bullets.push({direction: user_tank.direction, 
+		                   x: user_tank.pos_x + 1 + (x1) - 4/16, 
+						   y: user_tank.pos_y + 1 + (y1) - 4 / 16,
+						   texture_x: 322 + 8 * (user_tank.direction % 2 === 0 ? user_tank.direction : 4 - user_tank.direction),
+						   texture_y: 102});
+	}
+	
+	for (let bullet of this.bullets){
+		const bulletShift = new Map([
+		  [Direction.Up,    [ 0, -1]],
+		  [Direction.Down,  [ 0,  1]],
+          [Direction.Left,  [-1,  0]],
+          [Direction.Right, [ 1,  0]],
+		]);
+		const [dx, dy] = bulletShift.get(bullet.direction);
+		let x0 = Math.floor(bullet.x);
+		let y0 = Math.floor(bullet.y);
+		for (let i = 0; i < 2; i++){
+			for (let j = 0; j < 2; j++){
+				this.tasks.push({type: "cell", x: x0 + i, y: y0 + j});
+			}
+		}
+		bullet.x += dx * 3 / 16;
+		bullet.y += dy * 3 / 16;
+	}
+	
+    if (user_tank.move_frames === 0 && pressed_arrow !== null) {
+      user_tank.direction = pressed_arrow;
       const [pos, x1, x2, y1, y2, mult, edge] = tankShift.get(pressed_arrow);
 
-      if (tanks_list[0][pos] !== edge &&
-        this.grid[tanks_list[0].pos_y + y1][tanks_list[0].pos_x + x1] == Cell.Empty &&
-        this.grid[tanks_list[0].pos_y + y2][tanks_list[0].pos_x + x2] == Cell.Empty){
-        tanks_list[0].move_frames = 8;
-		tanks_list[0].stat = { name: "move", 
-		              start: { x: tanks_list[0].pos_x, y: tanks_list[0].pos_y},
-					  end_cell1: {x: tanks_list[0].pos_x + x1, y: tanks_list[0].pos_y + y1},
-					  end_cell2: {x: tanks_list[0].pos_x + x2, y: tanks_list[0].pos_y + y2},
+      if (user_tank[pos] !== edge &&
+        this.grid[user_tank.pos_y + y1][user_tank.pos_x + x1] == Cell.Empty &&
+        this.grid[user_tank.pos_y + y2][user_tank.pos_x + x2] == Cell.Empty){
+        user_tank.move_frames = 8;
+		user_tank.stat = { name: "move", 
+		              start: { x: user_tank.pos_x, y: user_tank.pos_y},
+					  end_cell1: {x: user_tank.pos_x + x1, y: user_tank.pos_y + y1},
+					  end_cell2: {x: user_tank.pos_x + x2, y: user_tank.pos_y + y2},
 					};
       }
     }
     
-	if (tanks_list[0].move_frames === 0){
-		tanks_list[0].stat = {name: "idle"};
+	if (user_tank.move_frames === 0){
+		user_tank.stat = {name: "idle"};
 	}
-    if (tanks_list[0].stat.name === "move"){
-		 console.log(tanks_list[0].stat);
-	  for (let cell of [tanks_list[0].stat.end_cell1, tanks_list[0].stat.end_cell2]){
+    if (user_tank.stat.name === "move"){
+		 console.log(user_tank.stat);
+	  for (let cell of [user_tank.stat.end_cell1, user_tank.stat.end_cell2]){
 		this.tasks.push({type: "cell", x: cell.x, y: cell.y});
 	  }
 	  for (let dx = 0; dx < 2; dx++){
 		  for (let dy = 0; dy < 2; dy++){
-			  this.tasks.push({type: "cell", x: tanks_list[0].stat.start.x + dx, y: tanks_list[0].stat.start.y + dy});
+			  this.tasks.push({type: "cell", x: user_tank.stat.start.x + dx, y: user_tank.stat.start.y + dy});
 		  }
 	  }
-      tanks_list[0].move_frames--;
-      console.log(tanks_list[0].move_frames);
+      user_tank.move_frames--;
+      console.log(user_tank.move_frames);
 
-      const shift = tankShift.get(tanks_list[0].direction);
+      const shift = tankShift.get(user_tank.direction);
 
-      tanks_list[0][shift[0]] += shift[5] * (2/16);
+      user_tank[shift[0]] += shift[5] * (2/16);
     }
     //move tank
     pressed_arrow = null;
@@ -125,6 +153,10 @@ class Field{
     
     for (let tank of this.tanks) {
         this.tasks.push({type: "tank", tank});
+    }
+	
+	for (let bullet of this.bullets) {
+        this.tasks.push({type: "bullet", bullet});
     }
 	
 	this.renderer.render();
@@ -160,6 +192,9 @@ class Renderer{
 			case "tank":
 				this.draw_tank(task.tank);
 				break;
+			case "bullet":
+				this.draw_bullet(task.bullet);
+				break;
 		}
 	}
 	draw_cell(i, j){
@@ -176,6 +211,12 @@ class Renderer{
 	draw_tank(tank){
 		this.context.drawImage(textures, tank.texture_x,  tank.texture_y, 16, 16, 
 		                       tank.pos_x * this.field.scale, tank.pos_y * this.field.scale, this.field.scale * 2, this.field.scale * 2);
+	}
+	draw_bullet(bullet){
+		console.log("!", textures, bullet.texture_x,  bullet.texture_y, 4, 4, 
+		                       bullet.x * this.field.scale, bullet.y * this.field.scale, this.field.scale / 2, this.field.scale / 2);
+		this.context.drawImage(textures, bullet.texture_x,  bullet.texture_y, 4, 4, 
+		                       bullet.x * this.field.scale, bullet.y * this.field.scale, this.field.scale / 2, this.field.scale / 2);
 	}
 }
 
@@ -197,6 +238,9 @@ function keyHandler(e){
     case "ArrowRight":
       pressed_arrow = Direction.Right;
       break;
+	case "Space":
+	  user_tank.shoot = true;
+	  break;
   }
 }
 
