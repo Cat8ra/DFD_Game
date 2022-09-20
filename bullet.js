@@ -1,9 +1,7 @@
 class Bullet extends Actor{
   constructor(pos_x = 0, pos_y = 0, dir = Direction.Up){
-	super();
-    this.x = pos_x;
-    this.y = pos_y;
-    this.direction = dir;
+	super(pos_x, pos_y, dir);
+    
 	this.size = 1/2;
 	this.speed = 3/16;
   }

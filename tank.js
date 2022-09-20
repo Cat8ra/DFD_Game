@@ -1,10 +1,8 @@
 class Tank extends Actor{
   constructor(pos_x = 0, pos_y = 0, dir = Direction.Up, texture = 0){
-	super();
-    this.x = pos_x;
-    this.y = pos_y;
+	super(pos_x, pos_y, dir);
+    
     this.id = Tank.new_id;
-    this.direction = dir;
     this.texture = texture;
 	this.stat = {name : "idle"};
 	this.shoot_cooldown = 0;
