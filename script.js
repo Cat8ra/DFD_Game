@@ -9,9 +9,6 @@ class Field{
     
         this.grid = new Array(height);
         for (let i = 0; i < height; i++){
-            
-        }
-        for (let i = 0; i < height; i++){
             this.grid[i] = new Array(width);
             for (let j = 0; j < width; j++){
                 this.grid[i][j] = Cell.Empty;
@@ -22,8 +19,9 @@ class Field{
         this.bullets = [];
     
         this.tasks = [{type: "field"}];
-    
-        this.frame_ = 0;
+        this.ais = [];
+        
+        this.turn_ = 0;
         this.fps = 16;
     
         this.tankShift = new Map([
@@ -44,9 +42,13 @@ class Field{
     addTank(tank){
         this.tanks.push(tank);
     }
+    
+    addAI(ai){
+        this.ais.push(ai);
+    }
   
     callTankMove(tank, direction){
-        if (tank.move_frames === 0) {
+        if (tank.move_turns === 0) {
         
             tank.direction = direction;
             const [pos, x1, x2, y1, y2, mult, edge] = this.tankShift.get(direction);
@@ -55,8 +57,8 @@ class Field{
                 this.grid[tank.y + y1][tank.x + x1] == Cell.Empty &&
                 this.grid[tank.y + y2][tank.x + x2] == Cell.Empty){
                 
-                    tank.move_frames = 8;
-                    tank.stat = { name: "move", 
+                    tank.move_turns = 8;
+                    tank.state = { name: "move", 
                                  start: { x: tank.x, y: tank.y },
                              end_cell1: { x: tank.x + x1, y: tank.y + y1 },
                              end_cell2: { x: tank.x + x2, y: tank.y + y2 },
@@ -83,6 +85,12 @@ class Field{
     }
   
     moveBullet(bullet){
+        if (bullet.move_turns < 1) {
+                    bullet.state = { name: "move", 
+                                     move_turns: bullet.state.move_turns + 1/bullet.speed
+                                   };
+        }
+        
         let x0 = Math.floor(bullet.x);
         let y0 = Math.floor(bullet.y);
         
@@ -101,25 +109,27 @@ class Field{
             bullet.y < 0 || bullet.y > this.width - bullet.size) { //TODO Wall
                 bullet.onWrongMove();   
         }
+            
+        bullet.state -= bullet.speed;
     }
   
     moveTank(tank){
-        if (tank.move_frames === 0){
-            tank.stat = {name: "idle"};
+        if (tank.move_turns === 0){
+            tank.state = {name: "idle"};
         }
         
-        if (tank.stat.name === "move"){
-            for (let cell of [tank.stat.end_cell1, tank.stat.end_cell2]){
+        if (tank.state.name === "move"){
+            for (let cell of [tank.state.end_cell1, tank.state.end_cell2]){
                 this.tasks.push({type: "cell", x: cell.x, y: cell.y});
             }
             
             for (let dx = 0; dx < 2; dx++){
                 for (let dy = 0; dy < 2; dy++){
-                    this.tasks.push({type: "cell", x: tank.stat.start.x + dx, y: tank.stat.start.y + dy});
+                    this.tasks.push({type: "cell", x: tank.state.start.x + dx, y: tank.state.start.y + dy});
                 }
             }
             
-            tank.move_frames--;
+            tank.move_turns--;
             
             const shift = this.tankShift.get(tank.direction);
             tank[shift[0]] += shift[5] * tank.speed;
@@ -152,9 +162,13 @@ class Field{
         for (let bullet of this.bullets) {
             this.tasks.push({type: "bullet", bullet});
         }
+        
+        for (let ai of this.ais) {
+            ai.turn();
+        }
     
         this.renderer.render();
-        this.frame_++;
+        this.turn_++;
     }
 }
 
@@ -191,4 +205,8 @@ const textures = new Image();
 textures.src = "textures.png";
 let user_tank = new Tank(0, 0, 0, Math.floor(Math.random() * 8));
 field.addTank(user_tank);
+let enemy_tank = new Tank(field.width - 2, field.height - 2, 0, Math.floor(Math.random() * 8) + 8);
+field.addTank(enemy_tank);
+let ai = new Private(field, enemy_tank);
+field.addAI(ai);
 setInterval(() => field.draw(), 1000/field.fps);
