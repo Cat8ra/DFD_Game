@@ -78,8 +78,8 @@ class Field{
             tank.shoot = false;
             tank.shoot_cooldown = 32;
             
-            this.bullets.push(new Bullet(tank.x + 1 + (x1) - 4 / 16, 
-                                         tank.y + 1 + (y1) - 4 / 16, 
+            this.bullets.push(new Bullet(tank.x + 1 + (x1 * 20/16) - 4 / 16, 
+                                         tank.y + 1 + (y1 * 20/16) - 4 / 16, 
                                          tank.direction));
         }
     }
@@ -148,8 +148,22 @@ class Field{
     
         for (let tank of this.tanks){
             this.moveTank(tank);
-        }   
-        //move tank
+        }
+        
+        for (let bullet of this.bullets){
+            let flags = Collider.objIntersects(bullet, this.tanks);
+            for (let i = 0; i < this.tanks.length; i++){
+                if (flags[i]){
+                    bullet.onVictim(this.tanks[i]);
+                    for (let j = 0; j < 3; j++){
+                        for (let k = 0; k < 3; k++){
+                            this.tasks.push({type: "cell", x: Math.floor(this.tanks[i].x) + j, y: Math.floor(this.tanks[i].y) + k});
+                        }
+                    }
+                }
+            }
+            this.tanks = this.tanks.filter(tank => tank.to_delete !== true);
+        }
     }
     
     draw(){

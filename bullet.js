@@ -14,4 +14,7 @@ class Bullet extends Actor{
   onWrongMove(){
 	  this.to_delete = true;
   }
+  onVictim(tank){
+      tank.to_delete = true;
+  }
 }

@@ -5,4 +5,5 @@ class Actor{
         this.direction = dir;
     }
 	onWrongMove(){}
+    onVictim(){}
 }
