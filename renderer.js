@@ -9,7 +9,8 @@ class Renderer{
         
         this.drawers = { terrain: new TerrainDrawer(),
                          vechile: new VechileDrawer(),
-                         projectile: new ProjectileDrawer()
+                         projectile: new ProjectileDrawer(),
+                         td_effect: new TankDeathDrawer()
                        }
 	}
 	render(){
@@ -52,7 +53,10 @@ class Renderer{
 				this.drawers.vechile.draw(this.context, this.scale, {tank: task.tank});
 				break;
 			case "bullet":
-        this.drawers.projectile.draw(this.context, this.scale, {bullet: task.bullet});
+                this.drawers.projectile.draw(this.context, this.scale, {bullet: task.bullet});
+				break;
+            case "td_effect":
+                this.drawers.td_effect.draw(this.context, this.scale, {td_effect: task.td_effect});
 				break;
 		}
 	}

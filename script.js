@@ -17,12 +17,13 @@ class Field{
     
         this.tanks = [];
         this.bullets = [];
+        this.td_effects = [];
     
         this.tasks = [{type: "field"}];
         this.ais = [];
         
         this.turn_ = 0;
-        this.fps = 16;
+        this.fps = 32;
     
         this.tankShift = new Map([
             [Direction.Up,    ['y',  0,  1, -1, -1, -1, 0]],
@@ -150,6 +151,22 @@ class Field{
             this.moveTank(tank);
         }
         
+        let n_td_effects = [];
+        for (let td_effect of this.td_effects){
+            td_effect.next_turn();
+            if (td_effect.to_delete === true){
+                for (let j = 0; j < 3; j++){
+                        for (let k = 0; k < 3; k++){
+                            this.tasks.push({type: "cell", x: Math.floor(td_effect.x) + j, y: Math.floor(td_effect.y) + k});
+                        }
+                    }
+            }
+            else{
+                n_td_effects.push(td_effect);
+            }
+        }
+        this.td_effects = n_td_effects;
+        
         for (let bullet of this.bullets){
             let flags = Collider.objIntersects(bullet, this.tanks);
             for (let i = 0; i < this.tanks.length; i++){
@@ -162,13 +179,27 @@ class Field{
                     }
                 }
             }
-            this.tanks = this.tanks.filter(tank => tank.to_delete !== true);
+            
+            let n_tanks = [];
+            for (let tank of this.tanks){
+                if (tank.to_delete === true){
+                    this.td_effects.push(new TankDeathEffect(tank.x, tank.y, tank.size));
+                }
+                else{
+                    n_tanks.push(tank);
+                }
+            }
+            this.tanks = n_tanks;
             this.bullets = this.bullets.filter(bullet => bullet.to_delete !== true);
         }
     }
     
     draw(){
         this.step();
+        
+        for (let td_effect of this.td_effects){
+            this.tasks.push({type: "td_effect", td_effect});
+        }
         
         for (let tank of this.tanks) {
             this.tasks.push({type: "tank", tank});
