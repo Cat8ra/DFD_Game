@@ -16,5 +16,6 @@ class Bullet extends Actor{
   }
   onVictim(tank){
       tank.to_delete = true;
+      this.to_delete = true;
   }
 }

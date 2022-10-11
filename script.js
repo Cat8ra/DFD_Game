@@ -163,6 +163,7 @@ class Field{
                 }
             }
             this.tanks = this.tanks.filter(tank => tank.to_delete !== true);
+            this.bullets = this.bullets.filter(bullet => bullet.to_delete !== true);
         }
     }
     

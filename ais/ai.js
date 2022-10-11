@@ -1,0 +1,4 @@
+class AI{
+    constructor(){}
+    turn(){}
+}
