@@ -26,10 +26,10 @@ class Field{
         this.fps = 32;
     
         this.tankShift = new Map([
-            [Direction.Up,    ['y',  0,  1, -1, -1, -1, 0]],
-            [Direction.Down,  ['y',  0,  1,  1,  1,  1, this.height - 2]],
-            [Direction.Left,  ['x', -1, -1,  0,  1, -1, 0]],
-            [Direction.Right, ['x',  1,  1,  0,  1,  1, this.width - 2]],
+            [Direction.Up,    ['y',  0,  1, -1, -1, -1, 0, 0, -1, 1, -1]],
+            [Direction.Down,  ['y',  0,  1,  1,  1,  1, this.height - 2, 0, Tank.SIZE, 1, Tank.SIZE]],
+            [Direction.Left,  ['x', -1, -1,  0,  1, -1, 0, -1, 0, -1, 1]],
+            [Direction.Right, ['x',  1,  1,  0,  1,  1, this.width - 2, Tank.SIZE, 0, Tank.SIZE, 1]],
         ]);
     
         this.bulletShift = new Map([
@@ -52,17 +52,17 @@ class Field{
         if (tank.move_turns === 0) {
         
             tank.direction = direction;
-            const [pos, x1, x2, y1, y2, mult, edge] = this.tankShift.get(direction);
+            const [pos, x1, x2, y1, y2, mult, edge, ex1, ey1, ex2, ey2] = this.tankShift.get(direction);
 
             if (tank[pos] !== edge &&
-                this.grid[tank.y + y1][tank.x + x1] == Cell.Empty &&
-                this.grid[tank.y + y2][tank.x + x2] == Cell.Empty){
+                this.grid[tank.y + ey1][tank.x + ex1] == Cell.Empty &&
+                this.grid[tank.y + ey2][tank.x + ex2] == Cell.Empty){
                 
                     tank.move_turns = 8;
                     tank.state = { name: "move", 
                                  start: { x: tank.x, y: tank.y },
-                             end_cell1: { x: tank.x + x1, y: tank.y + y1 },
-                             end_cell2: { x: tank.x + x2, y: tank.y + y2 },
+                             end_cell1: { x: tank.x + ex1, y: tank.y + ey1 },
+                             end_cell2: { x: tank.x + ex2, y: tank.y + ey2 },
                     };
                 }
             else{
@@ -74,7 +74,7 @@ class Field{
     callTankShoot(tank){
         if (tank.shoot_cooldown === 0){
             
-            const [pos, x1, x2, y1, y2, mult, edge] = this.tankShift.get(tank.direction);
+            const [pos, x1, x2, y1, y2, mult, edge, ex1, ey1, ex2, ey2] = this.tankShift.get(tank.direction);
             
             tank.shoot = false;
             tank.shoot_cooldown = 32;
@@ -191,6 +191,27 @@ class Field{
             }
             this.tanks = n_tanks;
             this.bullets = this.bullets.filter(bullet => bullet.to_delete !== true);
+            
+            let cells = Collider.cellsUnderObject(bullet);
+            console.log(cells);
+            for (let cell of cells){
+                if (this.grid[cell.y][cell.x] == Cell.Brick){
+                    this.grid[cell.y][cell.x] = Cell.Empty;
+                    this.tasks.push({type: "field", x: cell.x, y: cell.y});
+                    bullet.to_delete = true;
+                }
+            }
+            this.bullets = this.bullets.filter(bullet => bullet.to_delete !== true);
+        }
+        
+        if (this.tanks.length === 0){
+            end_status.textContent = "LOSER";
+        }
+        if (this.tanks.length === 1){
+            end_status.textContent = this.tanks[0] === user_tank ? "LOSER(n't)" : "LOSER";
+        }
+        if (this.tanks.find(tank => tank == user_tank) !== undefined){
+            end_status.textContent = "LOSER";
         }
     }
     
@@ -216,10 +237,20 @@ class Field{
         this.renderer.render();
         this.turn_++;
     }
+    
+    loadMap(textMap){
+        let index = 0;
+        for (let ch in textMap){
+            if (textMap[ch] !== "\n"){
+                this.grid[(index - (index % this.width)) / this.width][index % this.width] = Number(textMap[ch]);
+            }
+            index++;
+        }
+    }
 }
 
 
-class UI{
+/*class UI{
     static keyHandler(e){
         let text = e.code + '\n';
         if (e.code === "Space"){
@@ -237,22 +268,102 @@ class UI{
             break;
         }
     }
-}
+}*/
+//addEventListener("keydown", throttle(UI.keyHandler, 50));
+
 
 function throttle(func, limit){
     return func; //TODO
 }
 
-addEventListener("keydown", throttle(UI.keyHandler, 50));
+const keysMap = {
+	ArrowUp: 'move',
+	ArrowLeft: 'move',
+	ArrowDown: 'move',
+	ArrowRight: 'move',
+	Space: 'shoot',
+};
+
+const keysPressed = {
+	move: false,
+	shoot: false
+}
+
+let movementInterval;
+
+addEventListener("keydown", function(e) {
+	if (!keysMap[e.code]) {
+		return;
+	}
+	
+	if (keysMap[e.code] === 'move' && !keysPressed.move) {
+		clearInterval(movementInterval);
+		const dir = Direction[e.code.substring(5)];
+		
+		keysPressed.move = true;
+		field.callTankMove(user_tank, dir);
+		movementInterval = setInterval(() => {
+			field.callTankMove(user_tank, dir);
+		}, 50);
+	}
+});
+
+addEventListener("keyup", function(e) {
+	if (keysMap[e.code] === 'move') {
+		clearInterval(movementInterval);
+		keysPressed.move = false;
+	}
+	
+	
+	if (keysMap[e.code] === 'shoot') {
+		field.callTankShoot(user_tank);		
+	}
+});
+
 let field = new Field();
 let renderer = new Renderer(field);
 field.renderer = renderer;
 const textures = new Image();
 textures.src = "textures.png";
-let user_tank = new Tank(0, 0, 0, Math.floor(Math.random() * 8));
+let user_tank = new Tank(2, 2, 0, Math.floor(Math.random() * 8));
 field.addTank(user_tank);
-let enemy_tank = new Tank(field.width - 2, field.height - 2, 0, Math.floor(Math.random() * 8) + 8);
-field.addTank(enemy_tank);
-let ai = new Private(field, enemy_tank);
-field.addAI(ai);
+
+
+function getRndInteger(min, max) {
+  return Math.floor(Math.random() * (max - min + 1) ) + min;
+}
+
+const cellsInUse = new Map();
+const randomCoords = () => {
+	const coordX = getRndInteger(2, field.width - 2);
+	const coordY = getRndInteger(2, field.height - 2);
+	const coord_key = `${coordX}x${coordY}`;
+	
+	if (cellsInUse.has(coord_key)) {
+		return randomCoords();
+	}
+	
+	cellsInUse.set(coord_key);
+	
+	return [coordX, coordY];	
+}
+
+for(let a = 1, tanksCount = 10; a <= tanksCount; a++) {
+	const [x, y] = randomCoords();
+	
+	let enemy_tank = new Tank(x, y, 10, Math.floor(Math.random() * 8) + 8);
+	
+	field.addTank(enemy_tank);
+
+	let ai = new Private(field, enemy_tank);
+	field.addAI(ai);
+}
+
+let end_status = document.getElementById("end_status");
+end_status.textContent = "OK";
+
+//const reader = new FileReader();
+//let map_text = reader.readAsText(new File("", "maps/map1.mp"));
+field.loadMap(map1);
+
 setInterval(() => field.draw(), 1000/field.fps);

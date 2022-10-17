@@ -40,4 +40,17 @@ class Collider{
         }
         return flags;
     }
+    static cellsUnderObject(obj){
+        let x0 = Math.floor(obj.x);
+        let y0 = Math.floor(obj.y);
+        let x1 = Math.ceil(obj.x + obj.size);
+        let y1 = Math.ceil(obj.y + obj.size);
+        let ans = [];
+        for (let i = x0; i < x1; i++){
+            for (let j = y0; j < y1; j++){
+                ans.push({x: i, y: j});
+            }
+        }
+        return ans;
+    }
 }
