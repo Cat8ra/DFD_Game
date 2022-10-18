@@ -193,7 +193,7 @@ class Field{
             this.bullets = this.bullets.filter(bullet => bullet.to_delete !== true);
             
             let cells = Collider.cellsUnderObject(bullet);
-            console.log(cells);
+            
             for (let cell of cells){
                 if (this.grid[cell.y][cell.x] == Cell.Brick){
                     this.grid[cell.y][cell.x] = Cell.Empty;
@@ -210,7 +210,7 @@ class Field{
         if (this.tanks.length === 1){
             end_status.textContent = this.tanks[0] === user_tank ? "LOSER(n't)" : "LOSER";
         }
-        if (this.tanks.find(tank => tank == user_tank) !== undefined){
+        if (this.tanks.find(tank => tank === user_tank) === undefined){
             end_status.textContent = "LOSER";
         }
     }
