@@ -74,6 +74,7 @@ class Field{
     callTankShoot(tank){
         if (tank.shoot_cooldown === 0){
             
+            //console.log(tank.direction);
             const [pos, x1, x2, y1, y2, mult, edge, ex1, ey1, ex2, ey2] = this.tankShift.get(tank.direction);
             
             tank.shoot = false;
@@ -247,6 +248,81 @@ class Field{
             index++;
         }
     }
+    
+    freeToMove(cell_type){
+        return cell_type !== Cell.Brick && cell_type !== Cell.Wall;
+    }
+    
+    getPath(cellA, cellB){
+        const INF = 1000000;
+        let d = new Array();
+        let u = new Array();
+        let p = new Array();
+        for (let i = 0; i < this.width; i++){
+            d.push(new Array());
+            u.push(new Array());
+            p.push(new Array());
+            for (let j = 0; j < this.height; j++){
+                d[i].push(INF);
+                u[i].push(false);
+                p[i].push({x: -1, y: -1});
+            }
+        }
+        d[cellA.x][cellA.y] = 0;
+        for (let i = 0; i < this.width * this.height; i++){
+            let v = {x: -1, y: -1};
+            
+            for (let x = 0; x < this.width; x++){
+                for (let y = 0; y < this.height; y++){
+                    if (!u[x][y] && ((v.x === v.y && v.y === -1) || d[x][y] < d[v.x][v.y])){
+                        v = {x, y};
+                    }
+                }
+            }
+            
+            if (d[v.x][v.y] === INF){
+                break;
+            }
+            u[v.x][v.y] = true;
+            
+            if (v.x > 0 && this.freeToMove(this.grid[v.y][v.x - 1])){
+                if (d[v.x][v.y] + 1 < d[v.x - 1][v.y]){
+                    d[v.x - 1][v.y] = d[v.x][v.y] + 1;
+                    p[v.x - 1][v.y] = v;
+                }
+            }
+            if (v.x < this.width - 1 && this.freeToMove(this.grid[v.y][v.x + 1])){
+                if (d[v.x][v.y] + 1 < d[v.x + 1][v.y]){
+                    d[v.x + 1][v.y] = d[v.x][v.y] + 1;
+                    p[v.x + 1][v.y] = v;
+                }
+            }
+            if (v.y > 0 && this.freeToMove(this.grid[v.y - 1][v.x])){
+                if (d[v.x][v.y] + 1 < d[v.x][v.y - 1]){
+                    d[v.x][v.y - 1] = d[v.x][v.y] + 1;
+                    p[v.x][v.y - 1] = v;
+                }
+            }
+            if (v.y < this.height - 1 && this.freeToMove(this.grid[v.y + 1][v.x])){
+                if (d[v.x][v.y] + 1 < d[v.x][v.y + 1]){
+                    d[v.x][v.y + 1] = d[v.x][v.y] + 1;
+                    p[v.x][v.y + 1] = v;
+                }
+            }
+        }
+        
+        let path = new Array();
+        if (d[cellB.x][cellB.y] !== INF){
+            let cell = cellB;
+            while (cellA.x !== cell.x || cellA.y !== cell.y){
+                path.unshift(cell);
+                cell = p[cell.x][cell.y];
+            }
+        }
+        
+        return path;
+    }
+    
 }
 
 
@@ -326,6 +402,7 @@ field.renderer = renderer;
 const textures = new Image();
 textures.src = "textures.png";
 let user_tank = new Tank(2, 2, 0, Math.floor(Math.random() * 8));
+field.user_tank = user_tank; //TODO: rewrite user_tank
 field.addTank(user_tank);
 
 
@@ -348,14 +425,34 @@ const randomCoords = () => {
 	return [coordX, coordY];	
 }
 
-for(let a = 1, tanksCount = 10; a <= tanksCount; a++) {
+for(let a = 1, tanksCount = 3; a <= tanksCount; a++) {
 	const [x, y] = randomCoords();
 	
-	let enemy_tank = new Tank(x, y, 10, Math.floor(Math.random() * 8) + 8);
+	let enemy_tank = new Tank(x, y, Math.floor(Math.random() * 4), Math.floor(Math.random() * 8) + 8);
 	
 	field.addTank(enemy_tank);
 
 	let ai = new Private(field, enemy_tank);
+	field.addAI(ai);
+}
+for(let a = 1, tanksCount = 3; a <= tanksCount; a++) {
+	const [x, y] = randomCoords();
+	
+	let enemy_tank = new Tank(x, y, Math.floor(Math.random() * 4), Math.floor(Math.random() * 8) + 16);
+	
+	field.addTank(enemy_tank);
+
+	let ai = new Officer(field, enemy_tank);
+	field.addAI(ai);
+}
+for(let a = 1, tanksCount = 1; a <= tanksCount; a++) {
+	const [x, y] = randomCoords();
+	
+	let enemy_tank = new Tank(x, y, Math.floor(Math.random() * 4), Math.floor(Math.random() * 8) + 24);
+	
+	field.addTank(enemy_tank);
+
+	let ai = new OfficerII(field, enemy_tank);
 	field.addAI(ai);
 }
 

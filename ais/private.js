@@ -1,6 +1,6 @@
 class Private extends AI{
     constructor(field, tank){
-        super()
+        super();
         this.field = field;
         this.tank = tank;
         this.changeDirection();
