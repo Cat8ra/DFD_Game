@@ -55,8 +55,8 @@ class Field{
             const [pos, x1, x2, y1, y2, mult, edge, ex1, ey1, ex2, ey2] = this.tankShift.get(direction);
 
             if (tank[pos] !== edge &&
-                this.grid[tank.y + ey1][tank.x + ex1] == Cell.Empty &&
-                this.grid[tank.y + ey2][tank.x + ex2] == Cell.Empty){
+                this.freeToMove(this.grid[tank.y + ey1][tank.x + ex1]) &&
+                this.freeToMove(this.grid[tank.y + ey2][tank.x + ex2])){
                 
                     tank.move_turns = 8;
                     tank.state = { name: "move", 
@@ -185,6 +185,7 @@ class Field{
             for (let tank of this.tanks){
                 if (tank.to_delete === true){
                     this.td_effects.push(new TankDeathEffect(tank.x, tank.y, tank.size));
+                    this.tankDeathAudio.play();
                 }
                 else{
                     n_tanks.push(tank);
@@ -462,5 +463,6 @@ end_status.textContent = "OK";
 //const reader = new FileReader();
 //let map_text = reader.readAsText(new File("", "maps/map1.mp"));
 field.loadMap(map1);
+field.tankDeathAudio = new Audio("20031.mp3");
 
 setInterval(() => field.draw(), 1000/field.fps);

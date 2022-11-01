@@ -10,9 +10,9 @@ class Officer extends AI{
     }
     turn(){
         if (this.tank.move_turns === 0){
-            if (this.field.grid[Math.floor(this.field.user_tank.x)][Math.floor(this.field.user_tank.y)] === Cell.Grass){
+            if (this.field.grid[Math.floor(this.field.user_tank.y)][Math.floor(this.field.user_tank.x)] === Cell.Grass){
                 //console.log("dumb");
-                return dumbTurn();
+                return this.dumbTurn();
             }
             if (this.look_in === 0){
                 this.path = this.getPath();
