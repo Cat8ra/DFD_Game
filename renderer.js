@@ -41,6 +41,7 @@ class Renderer{
                 if (task.y < 0 || task.y >= this.field.width || task.x < 0 || task.x >= this.field.height){
                     break;
                 }
+                try{
 			    this.drawers.terrain.draw(this.context, this.scale, 
                             { width: this.width, 
                               height: this.height, 
@@ -48,6 +49,8 @@ class Renderer{
                               i: task.y, 
                               j: task.x
                             });
+                }
+                catch (e){console.log(e, task);}
 				break;
 			case "tank":
 				this.drawers.vechile.draw(this.context, this.scale, {tank: task.tank});

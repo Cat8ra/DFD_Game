@@ -1,6 +1,6 @@
 "use strict";
 const Direction = { Up: 0, Right: 1, Down: 2, Left: 3};
-const Cell = { Empty: 0, Brick: 1, Wall: 2, Grass: 3 };
+const Cell = { Empty: 0, Brick: 1, Wall: 2, Grass: 3, Water: 4 };
 
 class Field{
     constructor(width = 50, height = 50){
@@ -38,6 +38,15 @@ class Field{
             [Direction.Left,  [-1,  0]],
             [Direction.Right, [ 1,  0]],
         ]);
+        
+        this.cellViscosity = new Map([
+            [Cell.Empty, 8],
+            [Cell.Grass, 8],
+            [Cell.Brick, 8],
+            [Cell.Wall, 8],
+            
+            [Cell.Water, 16],
+        ]);
     }
   
     addTank(tank){
@@ -58,7 +67,10 @@ class Field{
                 this.freeToMove(this.grid[tank.y + ey1][tank.x + ex1]) &&
                 this.freeToMove(this.grid[tank.y + ey2][tank.x + ex2])){
                 
-                    tank.move_turns = 8;
+                    tank.move_turns = this.getMoveTurns(tank, direction);
+                    tank.speed = this.getTankSpeed(tank, direction);
+                    console.log(tank.move_turns);
+                    console.log(tank.speed);
                     tank.state = { name: "move", 
                                  start: { x: tank.x, y: tank.y },
                              end_cell1: { x: tank.x + ex1, y: tank.y + ey1 },
@@ -71,6 +83,13 @@ class Field{
         }
     }
   
+    getMoveTurns(tank, direction){
+        return this.cellViscosity.get(this.grid[Math.floor(tank.y)][Math.floor(tank.x)]);
+    }
+    getTankSpeed(tank, direction){
+        return 1 / this.cellViscosity.get(this.grid[Math.floor(tank.y)][Math.floor(tank.x)]);
+    }
+    
     callTankShoot(tank){
         if (tank.shoot_cooldown === 0){
             
@@ -111,6 +130,15 @@ class Field{
             bullet.y < 0 || bullet.y > this.width - bullet.size) { //TODO Wall
                 bullet.onWrongMove();   
         }
+        let cub = Collider.cellsUnderObject(bullet);
+        for (let cell of cub){
+            if (cell.y < 0 || cell.y >= this.width || cell.x < 0 || cell.x >= this.height){
+                continue;
+            }
+            if (this.grid[cell.y][cell.x] == Cell.Wall){
+                bullet.onWrongMove();
+            }
+        }
             
         bullet.state -= bullet.speed;
     }
@@ -118,6 +146,8 @@ class Field{
     moveTank(tank){
         if (tank.move_turns === 0){
             tank.state = {name: "idle"};
+            tank.x = Math.round(tank.x);
+            tank.y = Math.round(tank.y);
         }
         
         if (tank.state.name === "move"){
@@ -176,6 +206,18 @@ class Field{
                     for (let j = 0; j < 3; j++){
                         for (let k = 0; k < 3; k++){
                             this.tasks.push({type: "cell", x: Math.floor(this.tanks[i].x) + j, y: Math.floor(this.tanks[i].y) + k});
+                        }
+                    }
+                }
+            }
+            
+            let f2 = Collider.objIntersects(bullet, this.bullets);
+            for (let i = 0; i < this.bullets.length; i++){
+                if (f2[i] && this.bullets[i] !== bullet){
+                    bullet.onBullet(this.bullets[i]);
+                    for (let j = 0; j < 3; j++){
+                        for (let k = 0; k < 3; k++){
+                            this.tasks.push({type: "cell", x: Math.floor(this.bullets[i].x) + j, y: Math.floor(this.bullets[i].y) + k});
                         }
                     }
                 }
@@ -439,7 +481,7 @@ for(let a = 1, tanksCount = 3; a <= tanksCount; a++) {
 for(let a = 1, tanksCount = 3; a <= tanksCount; a++) {
 	const [x, y] = randomCoords();
 	
-	let enemy_tank = new Tank(x, y, Math.floor(Math.random() * 4), Math.floor(Math.random() * 8) + 16);
+	let enemy_tank = new Tank(x, y, Math.floor(Math.random() * 4), Math.floor(Math.random() * 8) + 16, 2);
 	
 	field.addTank(enemy_tank);
 
@@ -449,7 +491,7 @@ for(let a = 1, tanksCount = 3; a <= tanksCount; a++) {
 for(let a = 1, tanksCount = 1; a <= tanksCount; a++) {
 	const [x, y] = randomCoords();
 	
-	let enemy_tank = new Tank(x, y, Math.floor(Math.random() * 4), Math.floor(Math.random() * 8) + 24);
+	let enemy_tank = new Tank(x, y, Math.floor(Math.random() * 4), Math.floor(Math.random() * 8) + 24, 3);
 	
 	field.addTank(enemy_tank);
 

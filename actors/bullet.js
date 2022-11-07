@@ -15,7 +15,14 @@ class Bullet extends Actor{
 	  this.to_delete = true;
   }
   onVictim(tank){
-      tank.to_delete = true;
+      tank.hp--;
+      if (tank.hp === 0){
+          tank.to_delete = true; //TODO tank.hit();
+      }
       this.to_delete = true;
+  }
+  onBullet(bullet){
+      this.to_delete = true;
+      bullet.to_delete = true;
   }
 }
