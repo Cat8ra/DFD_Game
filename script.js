@@ -21,6 +21,9 @@ class Field{
     
         this.tasks = [{type: "field"}];
         this.ais = [];
+        this.consumables = [];
+        
+        this.consGen = new ConsumableGenerator();
         
         this.turn_ = 0;
         this.fps = 32;
@@ -97,11 +100,11 @@ class Field{
             const [pos, x1, x2, y1, y2, mult, edge, ex1, ey1, ex2, ey2] = this.tankShift.get(tank.direction);
             
             tank.shoot = false;
-            tank.shoot_cooldown = 32;
+            tank.shoot_cooldown = tank.max_shoot_cooldown;
             
             this.bullets.push(new Bullet(tank.x + 1 + (x1 * 20/16) - 4 / 16, 
                                          tank.y + 1 + (y1 * 20/16) - 4 / 16, 
-                                         tank.direction));
+                                         tank.direction, tank.bullets_speed, tank.team));
         }
     }
   
@@ -173,6 +176,11 @@ class Field{
     }
   
     step(){
+        
+        if (this.consGen.callNext()){
+            this.consumables.push(this.consGen.getNext());
+        }
+        
         for (let bullet of this.bullets){
             this.moveBullet(bullet);
         }   
@@ -247,6 +255,21 @@ class Field{
             }
             this.bullets = this.bullets.filter(bullet => bullet.to_delete !== true);
         }
+        
+        
+        let cellsUnderUserTank = Collider.cellsUnderObject(user_tank);
+        for (let cons of this.consumables){
+            this.tasks.push({type: "cons", cons});
+            if (Collider.objIntersects(user_tank, [cons])[0] === true){
+                cons.onConsume(user_tank);
+                 for (let j = 0; j < 3; j++){
+                        for (let k = 0; k < 3; k++){
+                            this.tasks.push({type: "cell", x: cons.x + j, y: cons.y + k});
+                        }
+                    }
+            }
+        }
+        this.consumables = this.consumables.filter(cons => cons.to_delete !== true);
         
         if (this.tanks.length === 0){
             end_status.textContent = "LOSER";
@@ -444,7 +467,7 @@ let renderer = new Renderer(field);
 field.renderer = renderer;
 const textures = new Image();
 textures.src = "textures.png";
-let user_tank = new Tank(2, 2, 0, Math.floor(Math.random() * 8));
+let user_tank = new Tank(2, 2, 0, 0);
 field.user_tank = user_tank; //TODO: rewrite user_tank
 field.addTank(user_tank);
 
@@ -471,7 +494,7 @@ const randomCoords = () => {
 for(let a = 1, tanksCount = 3; a <= tanksCount; a++) {
 	const [x, y] = randomCoords();
 	
-	let enemy_tank = new Tank(x, y, Math.floor(Math.random() * 4), Math.floor(Math.random() * 8) + 8);
+	let enemy_tank = new Tank(x, y, Math.floor(Math.random() * 4), Math.floor(Math.random() * 8) + 8, 1, 1);
 	
 	field.addTank(enemy_tank);
 
@@ -481,7 +504,7 @@ for(let a = 1, tanksCount = 3; a <= tanksCount; a++) {
 for(let a = 1, tanksCount = 3; a <= tanksCount; a++) {
 	const [x, y] = randomCoords();
 	
-	let enemy_tank = new Tank(x, y, Math.floor(Math.random() * 4), Math.floor(Math.random() * 8) + 16, 2);
+	let enemy_tank = new Tank(x, y, Math.floor(Math.random() * 4), Math.floor(Math.random() * 8) + 16, 2, 1);
 	
 	field.addTank(enemy_tank);
 
@@ -491,7 +514,7 @@ for(let a = 1, tanksCount = 3; a <= tanksCount; a++) {
 for(let a = 1, tanksCount = 1; a <= tanksCount; a++) {
 	const [x, y] = randomCoords();
 	
-	let enemy_tank = new Tank(x, y, Math.floor(Math.random() * 4), Math.floor(Math.random() * 8) + 24, 3);
+	let enemy_tank = new Tank(x, y, Math.floor(Math.random() * 4), Math.floor(Math.random() * 8) + 24, 3, 1);
 	
 	field.addTank(enemy_tank);
 

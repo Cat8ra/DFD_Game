@@ -1,9 +1,10 @@
 class Bullet extends Actor{
-  constructor(pos_x = 0, pos_y = 0, dir = Direction.Up){
+  constructor(pos_x = 0, pos_y = 0, dir = Direction.Up, speed = 3/16, team = 0){
 	super(pos_x, pos_y, dir);
     
 	this.size = 1/2;
-	this.speed = 3/16;
+	this.speed = speed;
+    this.team = team;
   }
   get texture_x(){
 	  return 322 + 8 * (this.direction % 2 === 0 ? this.direction : 4 - this.direction);
@@ -15,6 +16,9 @@ class Bullet extends Actor{
 	  this.to_delete = true;
   }
   onVictim(tank){
+      if (tank.team == this.team){
+          return;
+      }
       tank.hp--;
       if (tank.hp === 0){
           tank.to_delete = true; //TODO tank.hit();
