@@ -22,6 +22,9 @@ class Bullet extends Actor{
       tank.hp--;
       if (tank.hp === 0){
           tank.to_delete = true; //TODO tank.hit();
+          if (tank.ai !== undefined){ // OfficerII
+               field.consGen.setNext(Math.floor(tank.x), Math.floor(tank.y));
+          }
       }
       this.to_delete = true;
   }

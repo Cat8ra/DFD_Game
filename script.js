@@ -16,17 +16,19 @@ class Field{
         }
     
         this.tanks = [];
+        this.tanks_pool = [];
         this.bullets = [];
         this.td_effects = [];
     
         this.tasks = [{type: "field"}];
         this.ais = [];
+        this.ai_pool = [];
         this.consumables = [];
         
-        this.consGen = new ConsumableGenerator();
+        this.consGen = new CondConsumableGenerator();
         
         this.turn_ = 0;
-        this.fps = 32;
+        this.fps = 48;
     
         this.tankShift = new Map([
             [Direction.Up,    ['y',  0,  1, -1, -1, -1, 0, 0, -1, 1, -1]],
@@ -68,12 +70,14 @@ class Field{
 
             if (tank[pos] !== edge &&
                 this.freeToMove(this.grid[tank.y + ey1][tank.x + ex1]) &&
-                this.freeToMove(this.grid[tank.y + ey2][tank.x + ex2])){
+                this.freeToMove(this.grid[tank.y + ey2][tank.x + ex2]) &&
+                this.free(tank, tank.x + ex1, tank.y + ey1) &&
+                this.free(tank, tank.x + ex2, tank.y + ey2)){
                 
                     tank.move_turns = this.getMoveTurns(tank, direction);
                     tank.speed = this.getTankSpeed(tank, direction);
-                    console.log(tank.move_turns);
-                    console.log(tank.speed);
+                    //console.log(tank.move_turns);
+                    //console.log(tank.speed);
                     tank.state = { name: "move", 
                                  start: { x: tank.x, y: tank.y },
                              end_cell1: { x: tank.x + ex1, y: tank.y + ey1 },
@@ -86,6 +90,20 @@ class Field{
         }
     }
   
+    free(t, x, y){
+        for (let tank of this.tanks){
+            if (tank === t){
+                continue;
+            }
+            let add = Collider.cellsUnderObject(tank);
+            for (let cell of add){
+                if (cell.x == x && cell.y == y){
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
     getMoveTurns(tank, direction){
         return this.cellViscosity.get(this.grid[Math.floor(tank.y)][Math.floor(tank.x)]);
     }
@@ -176,6 +194,14 @@ class Field{
     }
   
     step(){
+        
+        while (this.tanks.length < this.max_tanks && this.tanks_pool.length > 0){
+            let index = Math.round(Math.random() * this.tanks_pool.length);
+            this.tanks.push(this.tanks_pool[index]);
+            this.ais.push(this.ai_pool[index]);
+            this.tanks_pool = this.tanks_pool.filter( (t, i) => i != index );
+            this.ai_pool = this.ai_pool.filter( (a, i) => i != index );
+        }
         
         if (this.consGen.callNext()){
             this.consumables.push(this.consGen.getNext());
@@ -280,6 +306,8 @@ class Field{
         if (this.tanks.find(tank => tank === user_tank) === undefined){
             end_status.textContent = "LOSER";
         }
+        
+        pool_status.textContent = `Pool: ${this.tanks_pool.length} tanks`;
     }
     
     draw(){
@@ -522,7 +550,41 @@ for(let a = 1, tanksCount = 1; a <= tanksCount; a++) {
 	field.addAI(ai);
 }
 
+for(let a = 1, tanksCount = 3; a <= tanksCount; a++) {
+	const [x, y] = randomCoords();
+	
+	let enemy_tank = new Tank(x, y, Math.floor(Math.random() * 4), Math.floor(Math.random() * 8) + 8, 1, 1);
+	
+	field.tanks_pool.push(enemy_tank);
+
+	let ai = new Private(field, enemy_tank);
+	field.ai_pool.push(ai);
+}
+for(let a = 1, tanksCount = 3; a <= tanksCount; a++) {
+	const [x, y] = randomCoords();
+	
+	let enemy_tank = new Tank(x, y, Math.floor(Math.random() * 4), Math.floor(Math.random() * 8) + 16, 1, 1);
+	
+	field.tanks_pool.push(enemy_tank);
+
+	let ai = new Officer(field, enemy_tank);
+	field.ai_pool.push(ai);
+}
+for(let a = 1, tanksCount = 3; a <= tanksCount; a++) {
+	const [x, y] = randomCoords();
+	
+	let enemy_tank = new Tank(x, y, Math.floor(Math.random() * 4), Math.floor(Math.random() * 8) + 24, 1, 1);
+	
+	field.tanks_pool.push(enemy_tank);
+
+	let ai = new OfficerII(field, enemy_tank);
+	field.ai_pool.push(ai);
+}
+
+field.max_tanks = 7 + 1;
+
 let end_status = document.getElementById("end_status");
+let pool_status = document.getElementById("pool_status");
 end_status.textContent = "OK";
 
 //const reader = new FileReader();

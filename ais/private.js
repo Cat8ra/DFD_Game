@@ -3,6 +3,7 @@ class Private extends AI{
         super();
         this.field = field;
         this.tank = tank;
+        this.tank.speed *= 1.5;
         this.changeDirection();
     }
     turn(){
