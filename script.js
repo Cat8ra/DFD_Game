@@ -112,7 +112,8 @@ class Field{
     }
     
     callTankShoot(tank){
-        if (tank.shoot_cooldown === 0){
+        let flag = tank === this.user_tank ? tank.live_bullets === false : tank.shoot_cooldown === 0;
+        if (flag){
             
             //console.log(tank.direction);
             const [pos, x1, x2, y1, y2, mult, edge, ex1, ey1, ex2, ey2] = this.tankShift.get(tank.direction);
@@ -122,7 +123,7 @@ class Field{
             
             this.bullets.push(new Bullet(tank.x + 1 + (x1 * 20/16) - 4 / 16, 
                                          tank.y + 1 + (y1 * 20/16) - 4 / 16, 
-                                         tank.direction, tank.bullets_speed, tank.team));
+                                         tank.direction, tank.bullets_speed, tank));
         }
     }
   
@@ -165,6 +166,10 @@ class Field{
     }
   
     moveTank(tank){
+        if (tank === undefined){
+            return;
+        }
+        
         if (tank.move_turns === 0){
             tank.state = {name: "idle"};
             tank.x = Math.round(tank.x);
@@ -257,6 +262,8 @@ class Field{
                 }
             }
             
+            this.tanks = this.tanks.filter(tank => tank !== undefined);
+            
             let n_tanks = [];
             for (let tank of this.tanks){
                 if (tank.to_delete === true){
@@ -277,6 +284,8 @@ class Field{
                     this.grid[cell.y][cell.x] = Cell.Empty;
                     this.tasks.push({type: "field", x: cell.x, y: cell.y});
                     bullet.to_delete = true;
+                    bullet.tank.live_bullets = false;
+                    console.log("!\\!");
                 }
             }
             this.bullets = this.bullets.filter(bullet => bullet.to_delete !== true);
@@ -591,5 +600,6 @@ end_status.textContent = "OK";
 //let map_text = reader.readAsText(new File("", "maps/map1.mp"));
 field.loadMap(map1);
 field.tankDeathAudio = new Audio("20031.mp3");
+
 
 setInterval(() => field.draw(), 1000/field.fps);

@@ -1,10 +1,12 @@
 class Bullet extends Actor{
-  constructor(pos_x = 0, pos_y = 0, dir = Direction.Up, speed = 3/16, team = 0){
+  constructor(pos_x = 0, pos_y = 0, dir = Direction.Up, speed = 3/16, tank){
 	super(pos_x, pos_y, dir);
     
 	this.size = 1/2;
 	this.speed = speed;
-    this.team = team;
+    this.tank = tank;
+    this.team = this.tank.team;
+    this.tank.live_bullets = true;
   }
   get texture_x(){
 	  return 322 + 8 * (this.direction % 2 === 0 ? this.direction : 4 - this.direction);
@@ -14,6 +16,8 @@ class Bullet extends Actor{
   }
   onWrongMove(){
 	  this.to_delete = true;
+      this.tank.live_bullets = false;
+      console.log("!\\!");
   }
   onVictim(tank){
       if (tank.team == this.team){
@@ -27,9 +31,14 @@ class Bullet extends Actor{
           }
       }
       this.to_delete = true;
+      this.tank.live_bullets = false;
+      console.log("!\\!");
   }
   onBullet(bullet){
       this.to_delete = true;
       bullet.to_delete = true;
+      bullet.tank.live_bullets = false;
+      this.tank.live_bullets = false;
+      console.log("!\\!");
   }
 }

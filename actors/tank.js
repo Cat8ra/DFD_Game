@@ -13,6 +13,7 @@ class Tank extends Actor{
     this.bullets_speed = 3/16;
     this.max_shoot_cooldown = 32;
     this.team = team;
+    this.live_bullets = false;
   }
   upgrade(){
       if (this.level < 4){

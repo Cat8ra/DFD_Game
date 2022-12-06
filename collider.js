@@ -31,6 +31,9 @@ class Collider{
              };
         let flags = [];
         for (let victim of victims){
+            if (victim === undefined){
+                continue;
+            }
             if (Collider.intersect(pr, { x: victim.x, y: victim.y, width: victim.size, height: victim.size})){
                 flags.push(true);
             }
