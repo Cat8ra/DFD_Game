@@ -335,7 +335,9 @@ class Field{
         }
         
         for (let ai of this.ais) {
-            ai.turn();
+            if (ai !== undefined){
+                ai.turn();
+            }
         }
     
         this.renderer.render();
@@ -499,8 +501,12 @@ addEventListener("keyup", function(e) {
 	}
 });
 
+
+let app = new PIXI.Application({ width: 800, height: 800 });
+document.body.appendChild(app.view);
+
 let field = new Field();
-let renderer = new Renderer(field);
+let renderer = new PIXI_Renderer(field);
 field.renderer = renderer;
 const textures = new Image();
 textures.src = "textures.png";
@@ -515,8 +521,8 @@ function getRndInteger(min, max) {
 
 const cellsInUse = new Map();
 const randomCoords = () => {
-	const coordX = getRndInteger(2, field.width - 2);
-	const coordY = getRndInteger(2, field.height - 2);
+	const coordX = getRndInteger(field.width / 2, field.width - 2);
+	const coordY = getRndInteger(field.height / 2, field.height - 2);
 	const coord_key = `${coordX}x${coordY}`;
 	
 	if (cellsInUse.has(coord_key)) {
@@ -598,8 +604,8 @@ end_status.textContent = "OK";
 
 //const reader = new FileReader();
 //let map_text = reader.readAsText(new File("", "maps/map1.mp"));
-field.loadMap(map1);
+field.loadMap(maps[Math.floor(Math.random() * maps.length)]);
 field.tankDeathAudio = new Audio("20031.mp3");
 
-
+      
 setInterval(() => field.draw(), 1000/field.fps);
