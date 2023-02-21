@@ -1,8 +1,11 @@
 class PIXI_ConsumableDrawer extends Drawer{
     draw(graphics, scale, data){
         let {cons} = data;
-        graphics.beginFill(0x00ffff);
-        graphics.drawRect(cons.x * scale, cons.y * scale, scale * cons.size, scale * cons.size);
-        graphics.endFill();
+
+        cons.sprite.x = cons.x * scale;
+        cons.sprite.y = cons.y * scale;
+
+        cons.sprite.scale.x = 2;
+        cons.sprite.scale.y = 2;
     }
 }

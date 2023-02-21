@@ -3,8 +3,9 @@ class Consumable extends Actor{
 	super(pos_x, pos_y, undefined);
     this.texture = texture;
     this.size = 2;
+    this.setSprite();
   }
   onConsume(tank){
-      this.to_delete = true;
+      this.kill();
   }
 }

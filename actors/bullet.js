@@ -6,7 +6,16 @@ class Bullet extends Actor{
 	this.speed = speed;
     this.tank = tank;
     this.team = this.tank.team;
-    this.tank.live_bullets = true;
+    this.tank.live_bullets++;
+
+    this.setSprite();
+  }
+
+  setSprite(){
+      this.sprite = PIXI.Sprite.from(spriteSheet.textures.bullet);
+
+      this.sprite.alpha = 0;
+      bulletContainer.addChild(this.sprite);
   }
   get texture_x(){
 	  return 322 + 8 * (this.direction % 2 === 0 ? this.direction : 4 - this.direction);
@@ -15,30 +24,43 @@ class Bullet extends Actor{
 	  return 102;
   }
   onWrongMove(){
-	  this.to_delete = true;
-      this.tank.live_bullets = false;
-      console.log("!\\!");
+	  this.kill();
+      //console.log("!\\!");
   }
   onVictim(tank){
-      if (tank.team == this.team){
+      if (tank.team === this.team){
           return;
       }
       tank.hp--;
+      if (tank === user_tank){
+          field.effects.push(new TankDeathEffect(tank.x, tank.y, tank.size));
+      }
+      console.log(tank.hp);
       if (tank.hp === 0){
-          tank.to_delete = true; //TODO tank.hit();
+          if (tank !== user_tank){
+              field.effects.push(new TankDeathEffect(tank.x, tank.y, tank.size));
+          }
+          tank.kill(); //TODO tank.hit();
           if (tank.ai !== undefined){ // OfficerII
                field.consGen.setNext(Math.floor(tank.x), Math.floor(tank.y));
           }
       }
-      this.to_delete = true;
-      this.tank.live_bullets = false;
-      console.log("!\\!");
+      else if (tank === user_tank){
+          tank.x = tank.y = 2;
+      }
+      this.kill();
+      //console.log("!\\!");
   }
   onBullet(bullet){
+      this.kill();
+      bullet.kill();
+      //console.log("!\\!");
+  }
+
+  kill(){
+      if (this.to_delete !== true)
+          this.tank.live_bullets--;
       this.to_delete = true;
-      bullet.to_delete = true;
-      bullet.tank.live_bullets = false;
-      this.tank.live_bullets = false;
-      console.log("!\\!");
+      bulletContainer.removeChild(this.sprite);
   }
 }

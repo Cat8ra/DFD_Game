@@ -9,9 +9,9 @@ class PIXI_Renderer{
 		this.height = this.field.height;
         
         this.drawers = { terrain: new PIXI_TerrainDrawer(),
-                         vechile: new PIXI_VechileDrawer(),
+                         vehicle: new PIXI_VehicleDrawer(),
                          projectile: new PIXI_ProjectileDrawer(),
-                         td_effect: new PIXI_TankDeathDrawer(),
+                         effect: new PIXI_EffectDrawer(),
                          cons: new PIXI_ConsumableDrawer()
                        };
 	}
@@ -55,7 +55,7 @@ class PIXI_Renderer{
                 catch (e){console.log(e, task);}
 				break;
 			case "tank":
-				this.drawers.vechile.draw(this.context, this.scale, {tank: task.tank});
+				this.drawers.vehicle.draw(this.context, this.scale, {tank: task.tank});
 				break;
 			case "bullet":
                 this.drawers.projectile.draw(this.context, this.scale, {bullet: task.bullet});
@@ -63,8 +63,8 @@ class PIXI_Renderer{
             case "cons":
                 this.drawers.cons.draw(this.context, this.scale, {cons: task.cons});
 				break;
-            case "td_effect":
-                this.drawers.td_effect.draw(this.context, this.scale, {td_effect: task.td_effect});
+            case "effect":
+                this.drawers.effect.draw(this.context, this.scale, {effect: task.effect});
 				break;
 		}
 	}

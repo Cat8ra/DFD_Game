@@ -4,6 +4,14 @@ class ConsumableStar extends Consumable{
   }
   onConsume(tank){
       tank.upgrade();
+      this.kill();
+  }
+  kill(){
       this.to_delete = true;
+      consContainer.removeChild(this.sprite);
+  }
+  setSprite(){
+      this.sprite = PIXI.Sprite.from(spriteSheet.textures.consumable_star); //`Star`
+      consContainer.addChild(this.sprite);
   }
 }
