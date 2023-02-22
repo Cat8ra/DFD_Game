@@ -91,6 +91,7 @@ window.onload = () => loadTextures().then(() => {
         }
 
         if (e.code == "Enter" && !gameStarted){
+            document.querySelector('.lauPopup').classList.add('lauHide');
             gameStarted = true;
 
             main_interval = setInterval(() => field.draw(), 1000/field.fps);;
@@ -268,7 +269,7 @@ function endOfGame(win){
     te_audio.pause();
     const big_popup = document.getElementsByClassName("lauPopup")[0];
     const small_popup = document.getElementsByClassName("popupWrap")[0];
-    const string = win ? "Winner!" : "Loser...";
+    const string = win ? "YOU WIN! PRESS F5 TO START!" : "YOU LOSE! PRESS F5 TO START!";
     console.log(document, document.getElementsByClassName("lauPopup"), small_popup, big_popup);
     small_popup.textContent = string;
     big_popup.classList.remove("lauHide");
